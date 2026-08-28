@@ -1,26 +1,140 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
+  --color-veda-bg: #F8F7F4;
+  --color-veda-card: #FFFFFF;
+  --color-veda-border: #E5E7EB;
+  --color-veda-text: #1C1C1E;
+  --color-veda-muted: #6B7280;
+  --color-veda-accent: #F97316;
+  --color-veda-accent-light: #FEF3EC;
+  --color-veda-correct: #22C55E;
+  --color-veda-partial: #F59E0B;
+  --color-veda-incorrect: #EF4444;
+  --color-veda-unmapped: #8B5CF6;
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+  --shadow-card: 0 1px 3px 0 rgba(0,0,0,0.06), 0 1px 2px -1px rgba(0,0,0,0.04);
+  --shadow-card-hover: 0 4px 12px 0 rgba(0,0,0,0.08), 0 1px 3px 0 rgba(0,0,0,0.04);
+  --shadow-card-active: 0 0 0 2px #F97316, 0 4px 12px 0 rgba(249,115,22,0.15);
+
+  --animate-float: float 3s ease-in-out infinite;
+  --animate-shimmer: shimmer 2s linear infinite;
+  --animate-highlight-appear: highlight_appear 0.3s ease-out forwards;
+  --animate-fade-slide-up: fadeSlideUp 0.4s ease-out forwards;
+  --animate-sparkle-orbit: orbit 2s linear infinite;
+
+  @keyframes float {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-8px); }
+  }
+  @keyframes shimmer {
+    0% { background-position: -200% 0; }
+    100% { background-position: 200% 0; }
+  }
+  @keyframes highlight_appear {
+    0% { opacity: 0; transform: scale(0.96); }
+    100% { opacity: 1; transform: scale(1); }
+  }
+  @keyframes fadeSlideUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes orbit {
+    from { transform: rotate(0deg) translateX(40px) rotate(0deg); }
+    to { transform: rotate(360deg) translateX(40px) rotate(-360deg); }
+  }
+  @keyframes highlight-pulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.4); }
+    50% { box-shadow: 0 0 0 8px rgba(34, 197, 94, 0); }
   }
 }
 
-body {
-  background: var(--background);
+:root {
+  --background: #F8F7F4;
+  --foreground: #1C1C1E;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html, body {
+  height: 100%;
+  background-color: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #D1D5DB; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #9CA3AF; }
+
+/* Upload dashed border */
+.upload-dashed {
+  background-image: url("data:image/svg+xml,%3csvg width='100%25' height='100%25' xmlns='http://www.w3.org/2000/svg'%3e%3crect width='100%25' height='100%25' fill='none' rx='16' ry='16' stroke='%23D1D5DB' stroke-width='2' stroke-dasharray='8%2c 6' stroke-dashoffset='0' stroke-linecap='round'/%3e%3c/svg%3e");
+}
+.upload-dashed-active {
+  background-image: url("data:image/svg+xml,%3csvg width='100%25' height='100%25' xmlns='http://www.w3.org/2000/svg'%3e%3crect width='100%25' height='100%25' fill='none' rx='16' ry='16' stroke='%23F97316' stroke-width='2' stroke-dasharray='8%2c 6' stroke-dashoffset='0' stroke-linecap='round'/%3e%3c/svg%3e");
+}
+
+/* Continuous orbital spin animations for the avatar badges */
+@keyframes spinSlow {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes spinSlowReverse {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(-360deg); }
+}
+
+.animate-spin-slow {
+  animation: spinSlow 20s linear infinite;
+}
+
+.animate-spin-slow-reverse {
+  animation: spinSlowReverse 20s linear infinite;
+}
+
+/* Skeleton shimmer */
+.skeleton {
+  background: linear-gradient(90deg, #f0f0f0 25%, #e8e8e8 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+/* Page enter animation */
+.page-enter {
+  animation: fadeSlideUp 0.4s ease-out forwards;
+}
+
+/* Highlight pulse on answer region */
+.highlight-pulse {
+  animation: highlight-pulse 2s ease-in-out 3;
+}
+
+/* Nav item transitions */
+.nav-item {
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+/* Question card selected */
+.question-card-selected {
+  box-shadow: 0 0 0 2px #F97316, 0 4px 12px rgba(249, 115, 22, 0.12);
+}
+
+/* Float animation for illustration */
+.animate-float {
+  animation: float 3s ease-in-out infinite;
+}
+
+/* Orbit dots for processing */
+.orbit-dot { animation: orbit 2s linear infinite; }
+.orbit-dot-2 { animation: orbit 2s linear infinite; animation-delay: -0.666s; }
+.orbit-dot-3 { animation: orbit 2s linear infinite; animation-delay: -1.333s; }
+
+/* Highlight appear */
+.animate-highlight-appear {
+  animation: highlight_appear 0.3s ease-out forwards;
 }
