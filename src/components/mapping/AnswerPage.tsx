@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
+import type { PDFDocumentProxy, PDFPageProxy } from 'pdfjs-dist';
 import { AnswerRegion } from '@/types';
 
 // Virtual coordinate space — bboxes from Gemini are normalized 0-1000,
@@ -17,16 +18,8 @@ interface AnswerPageProps {
   onTotalPagesDetected?: (total: number) => void;
 }
 
-interface PdfDocument {
-  numPages: number;
-  getPage: (pageNumber: number) => Promise<{
-    getViewport: (params: { scale: number }) => { width: number; height: number };
-    render: (params: { canvasContext: CanvasRenderingContext2D; viewport: unknown }) => { promise: Promise<void> };
-  }>;
-}
-
 // Keep a module-level cache so we don't re-parse the same PDF on every render
-const pdfCache = new Map<string, PdfDocument>();
+const pdfCache = new Map<string, PDFDocumentProxy>();
 
 export default function AnswerPage({
   pageNumber,
@@ -68,16 +61,14 @@ export default function AnswerPage({
           const mime = answerSheetFile.type;
 
           if (mime === 'application/pdf') {
-            // PDF rendering via pdfjs-dist
-            const pdfModule = await import('pdfjs-dist/legacy/build/pdf.js');
-            type PdfLib = {
-              GlobalWorkerOptions: { workerSrc: string };
-              getDocument: (params: { data: Uint8Array }) => { promise: Promise<PdfDocument> };
-            };
-            const pdfjsLib = ((pdfModule as unknown as { default?: PdfLib }).default ?? pdfModule) as unknown as PdfLib;
+            // PDF rendering via pdfjs-dist — import from package root so TypeScript
+            // can resolve types via "types": "types/src/pdf.d.ts" in package.json.
+            // next.config.ts aliases pdfjs-dist → pdfjs-dist/legacy/build/pdf.js
+            // for browser/Turbopack builds, ensuring wide browser compatibility.
+            const { getDocument, GlobalWorkerOptions } = await import('pdfjs-dist');
 
-            if (!pdfjsLib.GlobalWorkerOptions.workerSrc) {
-              pdfjsLib.GlobalWorkerOptions.workerSrc = '/pdf.worker.min.js';
+            if (!GlobalWorkerOptions.workerSrc) {
+              GlobalWorkerOptions.workerSrc = '/pdf.worker.min.js';
             }
 
             // Use cache to avoid re-parsing the same file
@@ -85,14 +76,14 @@ export default function AnswerPage({
             let pdfDoc = pdfCache.get(cacheKey);
             if (!pdfDoc) {
               const arrayBuffer = await answerSheetFile.arrayBuffer();
-              pdfDoc = await pdfjsLib.getDocument({ data: new Uint8Array(arrayBuffer) }).promise;
+              pdfDoc = await getDocument({ data: new Uint8Array(arrayBuffer) }).promise;
               pdfCache.set(cacheKey, pdfDoc);
             }
 
             if (active) {
               onTotalPagesDetected?.(pdfDoc.numPages);
               const targetPage = Math.min(Math.max(1, pageNumber), pdfDoc.numPages);
-              const pdfPage = await pdfDoc.getPage(targetPage);
+              const pdfPage: PDFPageProxy = await pdfDoc.getPage(targetPage);
 
               // Render at 2x for crisp text, then CSS downscales it
               const viewport = pdfPage.getViewport({ scale: 2.0 });
